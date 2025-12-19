@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>할인율-매출액 상관관계 분석</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .stat-box {
+            flex: 1;
+            padding: 15px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 할인율과 매출액 상관관계 분석</h1>
+    <div class="subtitle">상관계수: <strong>0.0760</strong> (양의 약한 상관관계)</div>
+    
+    <div class="stats">
+        <div class="stat-row">
+            <div class="stat-box">
+                <div class="stat-value">50</div>
+                <div class="stat-label">전체 상품 수</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">22.0%</div>
+                <div class="stat-label">평균 할인율</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">7.2M</div>
+                <div class="stat-label">평균 매출액 (백만원)</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-container">
+            <canvas id="scatterChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="barChart"></canvas>
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <canvas id="categoryChart"></canvas>
+    </div>
+
+    <script>
+        // 산점도 데이터
+        const scatterData = {
+            datasets: [{
+                label: '상품별 데이터',
+                data: [[{'x': 0, 'y': 12638000}, {'x': 10, 'y': 11875500}, {'x': 20, 'y': 17720800}, {'x': 30, 'y': 7644000}, {'x': 50, 'y': 6087500}, {'x': 0, 'y': 2660000}, {'x': 10, 'y': 6727200}, {'x': 20, 'y': 7113600}, {'x': 30, 'y': 3494400}, {'x': 50, 'y': 3907500}, {'x': 0, 'y': 2144000}, {'x': 10, 'y': 4762800}, {'x': 20, 'y': 4464000}, {'x': 30, 'y': 4989600}, {'x': 50, 'y': 4824000}, {'x': 0, 'y': 2520000}, {'x': 10, 'y': 9400800}, {'x': 20, 'y': 8978400}, {'x': 30, 'y': 9947000}, {'x': 50, 'y': 4279000}, {'x': 0, 'y': 3248000}, {'x': 10, 'y': 12488400}, {'x': 20, 'y': 10771200}, {'x': 30, 'y': 17728200}, {'x': 50, 'y': 12478500}, {'x': 0, 'y': 2492000}, {'x': 10, 'y': 8425500}, {'x': 20, 'y': 5980800}, {'x': 30, 'y': 5460000}, {'x': 50, 'y': 4806000}, {'x': 0, 'y': 4802000}, {'x': 10, 'y': 10179000}, {'x': 20, 'y': 9828000}, {'x': 30, 'y': 8467200}, {'x': 50, 'y': 11347500}, {'x': 0, 'y': 4785000}, {'x': 10, 'y': 7480800}, {'x': 20, 'y': 5548800}, {'x': 30, 'y': 5966400}, {'x': 50, 'y': 7296000}, {'x': 0, 'y': 5025000}, {'x': 10, 'y': 12096000}, {'x': 20, 'y': 5488000}, {'x': 30, 'y': 10521000}, {'x': 50, 'y': 4672500}, {'x': 0, 'y': 4305000}, {'x': 10, 'y': 3370200}, {'x': 20, 'y': 7238400}, {'x': 30, 'y': 4586400}, {'x': 50, 'y': 4532000}]],
+                backgroundColor: 'rgba(33, 150, 243, 0.6)',
+                borderColor: 'rgba(33, 150, 243, 1)',
+                borderWidth: 1,
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        };
+
+        // 산점도 차트
+        new Chart(document.getElementById('scatterChart'), {
+            type: 'scatter',
+            data: scatterData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '할인율 vs 매출액 (산점도)',
+                        font: { size: 16 }
+                    },
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: '할인율 (%)' },
+                        min: -5,
+                        max: 55
+                    },
+                    y: {
+                        title: { display: true, text: '매출액 (원)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 할인율별 평균 매출
+        const avgData = {0: 4461900.0, 10: 8680620.0, 20: 8313200.0, 30: 7880420.0, 50: 6423050.0};
+        
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: [0, 10, 20, 30, 50],
+                datasets: [{
+                    label: '평균 매출액',
+                    data: [4461900.0, 8680620.0, 8313200.0, 7880420.0, 6423050.0],
+                    backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                    borderColor: 'rgba(76, 175, 80, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '할인율별 평균 매출액',
+                        font: { size: 16 }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: '할인율 (%)' }
+                    },
+                    y: {
+                        title: { display: true, text: '평균 매출액 (원)' },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 카테고리별 상관계수
+        const catCorr = {'뷰티': 0.106, '생활용품': 0.063, '스포츠': 0.051, '식품': 0.362, '전자기기': -0.395, '패션': 0.581};
+        
+        new Chart(document.getElementById('categoryChart'), {
+            type: 'bar',
+            data: {
+                labels: ['뷰티', '생활용품', '스포츠', '식품', '전자기기', '패션'],
+                datasets: [{
+                    label: '상관계수',
+                    data: [0.106, 0.063, 0.051, 0.362, -0.395, 0.581],
+                    backgroundColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 0 ? 'rgba(33, 150, 243, 0.6)' : 'rgba(244, 67, 54, 0.6)';
+                    },
+                    borderColor: function(context) {
+                        const value = context.parsed.y;
+                        return value >= 0 ? 'rgba(33, 150, 243, 1)' : 'rgba(244, 67, 54, 1)';
+                    },
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '카테고리별 할인율-매출액 상관계수',
+                        font: { size: 16 }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: '카테고리' }
+                    },
+                    y: {
+                        title: { display: true, text: '상관계수' },
+                        min: -1,
+                        max: 1
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
